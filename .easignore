@@ -1,0 +1,17 @@
+.ssh
+*.sock
+*.socket
+go
+go/
+pkg/
+*.golang
+node_modules/.cache
+.git
+*.log
+__pycache__
+*.pyc
+.gradle
+.android
+.idea
+*.tar.gz
+*.zip
