@@ -2,23 +2,38 @@ import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useState } from 'react';
-
+import * as Speech from 'expo-speech';
 
 const injectedJS = `
   if (!window.speechSynthesis) {
     window.speechSynthesis = {
       speak: function(u) { window.ReactNativeWebView.postMessage(JSON.stringify({type:'tts',text:u.text})) },
-      cancel: function() {},
+      cancel: function() { window.ReactNativeWebView.postMessage(JSON.stringify({type:'tts_stop'})) },
       getVoices: function() { return [] },
       onvoiceschanged: null
     };
-    window.SpeechSynthesisUtterance = function(text) { this.text = text; this.lang = 'fr-FR'; };
+    window.SpeechSynthesisUtterance = function(text) {
+      this.text = text; this.lang = 'fr-FR'; this.rate = 0.9; this.pitch = 1.0;
+    };
   }
   true;
 `;
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+
+  const handleMessage = (e) => {
+    try {
+      const d = JSON.parse(e.nativeEvent.data);
+      if (d.type === 'tts') {
+        Speech.stop();
+        Speech.speak(d.text, { language: 'fr-FR', pitch: 1.0, rate: 0.9 });
+      }
+      if (d.type === 'tts_stop') {
+        Speech.stop();
+      }
+    } catch (err) {}
+  };
 
   return (
     <View style={styles.container}>
@@ -32,12 +47,12 @@ export default function App() {
         source={{ uri: 'https://reussitess.fr' }}
         style={styles.webview}
         onLoadEnd={() => setLoading(false)}
+        onMessage={handleMessage}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         allowsInlineMediaPlayback={true}
         mediaPlaybackRequiresUserAction={false}
         injectedJavaScript={injectedJS}
-        onMessage={(e) => { try { const d=JSON.parse(e.nativeEvent.data); if(d.type==='tts') console.log('[TTS]',d.text) } catch(err){} }}
         userAgent="REUSSITESS-AI-App/1.0 Android"
       />
     </View>
