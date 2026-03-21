@@ -3,6 +3,20 @@ import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useState } from 'react';
 
+
+const injectedJS = `
+  if (!window.speechSynthesis) {
+    window.speechSynthesis = {
+      speak: function(u) { window.ReactNativeWebView.postMessage(JSON.stringify({type:'tts',text:u.text})) },
+      cancel: function() {},
+      getVoices: function() { return [] },
+      onvoiceschanged: null
+    };
+    window.SpeechSynthesisUtterance = function(text) { this.text = text; this.lang = 'fr-FR'; };
+  }
+  true;
+`;
+
 export default function App() {
   const [loading, setLoading] = useState(true);
 
@@ -22,6 +36,8 @@ export default function App() {
         domStorageEnabled={true}
         allowsInlineMediaPlayback={true}
         mediaPlaybackRequiresUserAction={false}
+        injectedJavaScript={injectedJS}
+        onMessage={(e) => { try { const d=JSON.parse(e.nativeEvent.data); if(d.type==='tts') console.log('[TTS]',d.text) } catch(err){} }}
         userAgent="REUSSITESS-AI-App/1.0 Android"
       />
     </View>
