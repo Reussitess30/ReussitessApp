@@ -48,6 +48,9 @@ export default function App() {
         style={styles.webview}
         onLoadEnd={() => setLoading(false)}
         onMessage={handleMessage}
+        onShouldStartLoadWithRequest={(request) => {
+          return request.url.startsWith('https://reussitess.fr') || request.url === 'about:blank'
+        }}
         javaScriptEnabled={true}
         domStorageEnabled={true}
         allowsInlineMediaPlayback={true}
